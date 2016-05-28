@@ -6,6 +6,7 @@ import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+import java.io.IOException;
 import java.util.Random;
 
 /**
@@ -33,8 +34,12 @@ public class TempAgent extends Agent {
                 if (tempReq.getSender().getLocalName().equals("CoorAgent")) {
                     ACLMessage temp = new ACLMessage(ACLMessage.INFORM);
                     temp.addReceiver(new AID("CoorAgent", false));
-                    temp.setContent(Integer.toString(temperature));
-                    send(temp);
+                    try {
+                        temp.setContentObject(temperature);
+                        send(temp);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
