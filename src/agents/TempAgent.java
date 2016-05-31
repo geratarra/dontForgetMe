@@ -34,12 +34,13 @@ public class TempAgent extends Agent {
                 if (tempReq.getSender().getLocalName().equals("CoorAgent")) {
                     ACLMessage temp = new ACLMessage(ACLMessage.INFORM);
                     temp.addReceiver(new AID("CoorAgent", false));
-                    try {
-                        temp.setContentObject(temperature);
-                        send(temp);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+//                    try {
+//                        temp.setContentObject(temperature);
+//                        send(temp);
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+                    temp.setContent(Integer.toString(temperature));
                 }
             }
         });

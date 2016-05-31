@@ -1,10 +1,13 @@
 package agents;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+import java.io.IOException;
 import java.util.Random;
 
 
@@ -25,7 +28,7 @@ public class CarAgent extends Agent {
     }
     public static boolean getInternAlarmState;
 
-    MessageTemplate generalTemplate = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+    MessageTemplate requestTemplate = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
 
     public void setup() {
         System.out.println("Agente >> " + getLocalName() + " iniciado.");
@@ -33,15 +36,24 @@ public class CarAgent extends Agent {
 
             public void action() {
 
-                ACLMessage coorMsg = receive(generalTemplate);
-                if (coorMsg != null && coorMsg.getContent().equals("Encender alarma interna")) {
-                    System.out.println("Alarma interna de auto ENCENDIDA");
+                ACLMessage coorMsg = receive();
+                if (coorMsg != null && coorMsg.getSender().getLocalName().equals("CoorAgent") &&
+                        coorMsg.getPerformative() == ACLMessage.REQUEST) {
+                    // Sending info to CoorAgent
+                    ACLMessage infoResp = new ACLMessage(ACLMessage.INFORM);
+                    infoResp.addReceiver(new AID("CoorAgent", false));
+
+                    engineState = new Random().nextBoolean();
+                    doorsState = new Random().nextBoolean();
+
+                    infoResp.setContent(Boolean.toString(engineState) + " " + Boolean.toString(doorsState));
+                    send(infoResp);
+                } else if (coorMsg != null && coorMsg.getSender().getLocalName().equals("CoorAgent") &&
+                        coorMsg.getPerformative() == ACLMessage.INFORM) {
+                    internAlarm = true;
+                    System.out.println("CarAgent encencio alarma interna!");
                 }
-
-                engineState = new Random().nextBoolean();
 //                System.out.println("Motor de carro >> " + engineState);
-
-                doorsState = new Random().nextBoolean();
 //                System.out.println("Puertas de carro >> " + doorsState + "\n");
             }
         });
