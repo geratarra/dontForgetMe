@@ -3,15 +3,8 @@ package agents;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
-import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.Property;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-
-import java.io.IOException;
 import java.util.Random;
 
 /**
@@ -28,7 +21,6 @@ public class WPAgent extends Agent {
 
         System.out.println("Agente >> " + getLocalName() + " iniciado.");
         addBehaviour(new TickerBehaviour(this, 2000) {
-            @Override
             protected void onTick() {
 
                 try {

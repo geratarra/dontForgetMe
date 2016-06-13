@@ -19,6 +19,7 @@ public class CarAgent extends Agent {
     private static boolean engineState;
     private static boolean doorsState;
     private static boolean internAlarm;
+    private static boolean locks;
 
     public static boolean getEngineState() {
         return engineState;
@@ -27,6 +28,8 @@ public class CarAgent extends Agent {
         return doorsState;
     }
     public static boolean getInternAlarmState;
+    public static void setDoorState() { doorsState = !doorsState; }
+    public static void setInterAlarmState() { internAlarm = !internAlarm; }
 
     MessageTemplate requestTemplate = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
 
@@ -52,6 +55,8 @@ public class CarAgent extends Agent {
                         coorMsg.getPerformative() == ACLMessage.INFORM) {
                     internAlarm = true;
                     System.out.println("CarAgent encencio alarma interna!");
+                    setDoorState();
+                    
                 }
 //                System.out.println("Motor de carro >> " + engineState);
 //                System.out.println("Puertas de carro >> " + doorsState + "\n");

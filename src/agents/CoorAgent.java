@@ -25,7 +25,6 @@ public class CoorAgent extends Agent {
         System.out.println("Agente >> " + getLocalName() + " iniciado.");
 
         addBehaviour(new TickerBehaviour(this, 2000) {
-            @Override
             protected void onTick() {
 
                 // Sending request to TempAgent
