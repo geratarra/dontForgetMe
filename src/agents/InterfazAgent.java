@@ -12,7 +12,6 @@ public class InterfazAgent extends Agent {
     protected void setup() {
         System.out.println("Agente interfaz activado.");
         addBehaviour(new CyclicBehaviour() {
-            @Override
             public void action() {
                 ACLMessage alertMsg = blockingReceive();
                 if (alertMsg != null && alertMsg.getSender().getLocalName().equals("CoorAgent")) {

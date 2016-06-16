@@ -192,7 +192,7 @@ public class CoorAgent extends Agent {
                 if (doorStateResp != null && doorStateResp.getSender().getLocalName().equals("CarAgent")) {
                     System.out.println("Coordinador recibio de >> " + doorStateResp.getSender().getName() +
                             " puerta del conductor >> " + doorStateResp.getContent() + "\n");
-                    doorState = Boolean.valueOf(doorStateResp.getContent());
+                    doorState = Boolean.parseBoolean(doorStateResp.getContent());
                     weightReq();
                 }
             }
@@ -207,7 +207,7 @@ public class CoorAgent extends Agent {
                 if (wResp != null && wResp.getSender().getLocalName().equals("WPAgent")) {
                     System.out.println("Coordinador recibio de >> " + wResp.getSender().getName() +
                             " peso >> " + wResp.getContent() + "\n");
-                    weight = Float.valueOf(wResp.getContent());
+                    weight = Float.parseFloat(wResp.getContent());
                     ACLMessage stopTimer = new ACLMessage(ACLMessage.INFORM);
                     stopTimer.addReceiver(new AID("CoorAgent", false));
                     stopTimer.setContent("Stop timer");
@@ -258,7 +258,7 @@ public class CoorAgent extends Agent {
                 System.out.println("Executing behaviour " + getBehaviourName());
                 ACLMessage wResp = blockingReceive(generalTemplate);
                 if (wResp != null && wResp.getSender().getLocalName().equals("WPAgent")) {
-                    if (Float.valueOf(wResp.getContent()) < 10) {
+                    if (Float.parseFloat(wResp.getContent()) < 10) {
                         lockMsg();
                         System.out.println("Caso 2 terminado: alerta nivel 1");
                     }
@@ -287,7 +287,7 @@ public class CoorAgent extends Agent {
                 if (tempResp != null && tempResp.getSender().getLocalName().equals("TempAgent") &&
                         tempResp.getPerformative() == ACLMessage.INFORM) {
                     System.out.println("CoorAgent recibio temperatura >> " + tempResp.getContent());
-                    if (Integer.valueOf(tempResp.getContent()) >= 30) {
+                    if (Integer.parseInt(tempResp.getContent()) >= 30) {
                         ACLMessage phoneAlert = new ACLMessage(ACLMessage.INFORM);
                         phoneAlert.addReceiver(new AID("InterfazAgent", false));
                         phoneAlert.setContent("Alert level 2");
@@ -315,7 +315,7 @@ public class CoorAgent extends Agent {
                 System.out.println("Executing behaviour " + getBehaviourName());
                 ACLMessage wResp = blockingReceive(generalTemplate);
                 if (wResp != null && wResp.getSender().getLocalName().equals("WPAgent")) {
-                    if (Float.valueOf(wResp.getContent()) < 10) {
+                    if (Float.parseFloat(wResp.getContent()) < 10) {
                         lockMsg();
                         System.out.println("Caso 3 terminado: alerta nivel 2");
                     }

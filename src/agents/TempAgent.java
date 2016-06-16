@@ -19,7 +19,6 @@ public class TempAgent extends Agent {
     protected void setup() {
         System.out.println("Agente >> " + getLocalName() + " iniciado.");
         addBehaviour(new CyclicBehaviour() {
-            @Override
             public void action() {
                 ACLMessage tempResp = blockingReceive(generalTemplate);
                 if (tempResp != null && tempResp.getSender().getLocalName().equals("CoorAgent")) {
