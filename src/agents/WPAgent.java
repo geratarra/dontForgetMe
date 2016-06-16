@@ -2,6 +2,7 @@ package agents;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -19,28 +20,34 @@ public class WPAgent extends Agent {
 
     protected void setup(){
 
+        doWait(3000);
         System.out.println("Agente >> " + getLocalName() + " iniciado.");
-        addBehaviour(new TickerBehaviour(this, 2000) {
-            protected void onTick() {
-
-                try {
-                    // Weight limit: 10 Kg
-                    weight = (float) (Math.floor((new Random().nextFloat()*(15 - 5) + 5)*100)/100);
-                    System.out.println("Peso en el auto >> " + weight + " Kg");
-
-                    // Presure limit: 125 N/m^2
-                    presure = new Random().nextInt(150 - 100) + 100;
-                    System.out.println("Presion en el auto >> " + presure + " N/m^2");
-                } catch (Exception e) {
-                    System.out.println(e);
-                }
-
+        addBehaviour(new CyclicBehaviour(this) {
+            public void action() {
                 ACLMessage wpReq = blockingReceive(generalTemplate);
-                if (wpReq != null && wpReq.getSender().getLocalName().equals("CoorAgent")) {
-                    ACLMessage wp = new ACLMessage(ACLMessage.INFORM);
-                    wp.addReceiver(new AID("CoorAgent", false));
-                    wp.setContent(Float.toString(weight) + " " + Float.toString(presure));
-                    send(wp);
+                if (wpReq != null && wpReq.getSender().getLocalName().equals("CoorAgent") &&
+                        wpReq.getPerformative() == ACLMessage.REQUEST) {
+                    if (wpReq.getContent().equals("Give me the weight")) {
+                        ACLMessage w = new ACLMessage(ACLMessage.INFORM);
+                        w.addReceiver(new AID("CoorAgent", false));
+                        w.setContent(Float.toString(weight));
+                        send(w);
+                    } else if (wpReq.getContent().equals("Give me the weight 1")) {
+                        ACLMessage w = new ACLMessage(ACLMessage.INFORM);
+                        w.addReceiver(new AID("CoorAgent", false));
+                        // Weight limit: 10 Kg
+                        weight = (float) (Math.floor((new Random().nextFloat()*(15 - 10) + 10)*100)/100);
+                        w.setContent(Float.toString(weight));
+                        send(w);
+                        weight = (float) (Math.floor((new Random().nextFloat()*(15 - 7) + 7)*100)/100);
+                    } else if (wpReq.getContent().equals("Give me the weight 2")) {
+                        ACLMessage w = new ACLMessage(ACLMessage.INFORM);
+                        w.addReceiver(new AID("CoorAgent", false));
+                        // Weight limit: 10 Kg
+                        weight = (float) (Math.floor((new Random().nextFloat()*(9.99 - 5) + 5)*100)/100);
+                        w.setContent(Float.toString(weight));
+                        send(w);
+                    }
                 }
             }
         });
