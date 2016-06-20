@@ -14,15 +14,15 @@ import java.util.Random;
 public class TempAgent extends Agent {
 
     private static int temperature;
-    MessageTemplate generalTemplate = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+    MessageTemplate requestTemplate = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
 
     protected void setup() {
         System.out.println("Agente >> " + getLocalName() + " iniciado.");
         addBehaviour(new CyclicBehaviour() {
             public void action() {
-                ACLMessage tempResp = blockingReceive(generalTemplate);
+                ACLMessage tempResp = blockingReceive(requestTemplate);
                 if (tempResp != null && tempResp.getSender().getLocalName().equals("CoorAgent")) {
-                    temperature = new Random().nextInt((35 - 30) + 1) + 30;
+                    temperature = new Random().nextInt((35 - 25) + 1) + 25;
                     ACLMessage temp = new ACLMessage(ACLMessage.INFORM);
                     temp.addReceiver(new AID("CoorAgent", false));
                     temp.setContent(Integer.toString(temperature));
