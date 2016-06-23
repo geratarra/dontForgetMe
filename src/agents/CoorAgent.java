@@ -23,78 +23,127 @@ public class CoorAgent extends Agent {
 
     private static boolean doorState;
     private static boolean engineState;
-    private static boolean internAlarmState;
     private static boolean timer;
     private static int temperature;
     private static float weight;
 
+    /**
+     * Envia mensaje de peticion de peso al agente CarAgent
+     * @return void
+     */
     private void weightReq() {
-        // Sending request to WPAgent
+        // El mensaje sera tipo REQUEST
         ACLMessage wReq = new ACLMessage(ACLMessage.REQUEST);
+        // Se anade el receptor (usando un identificador AID)
         wReq.addReceiver(new AID("WPAgent", false));
+        // Se agrega el contenido
         wReq.setContent("Give me the weight");
+        // Se envia el mensaje
         send(wReq);
     }
 
+    /**
+     * Envia mensaje al agente CarAgent informando que debe bloquear los seguros del auto
+     * @return void
+     */
     private void lockMsg() {
+        // El mensaje sera tipo INFORM
         ACLMessage lockCar = new ACLMessage(ACLMessage.INFORM);
         lockCar.addReceiver(new AID("CarAgent", false));
         lockCar.setContent("Lock the car");
         send(lockCar);
     }
 
+    /**
+     * Envia mensaje al agente CarAgent informando que debe desbloquear los seguros del auto
+     * @return void
+     */
     private void unlockMsg() {
+        // El mensaje sera tipo INFORM
         ACLMessage unlockMsg = new ACLMessage(ACLMessage.INFORM);
         unlockMsg.addReceiver(new AID("CarAgent", false));
         unlockMsg.setContent("Unlock the doors");
         send(unlockMsg);
     }
 
+    /**
+     * Envia mensaje al agente InterfazAgent, informando que debe activar la alerta nivel 1
+     * @return void
+     */
     private void level1Alert() {
+        // El mensaje sera tipo INFORM
         ACLMessage phoneAlert = new ACLMessage(ACLMessage.INFORM);
         phoneAlert.addReceiver(new AID("InterfazAgent", false));
         phoneAlert.setContent("Alert level 1");
         send(phoneAlert);
     }
 
+    /**
+     * Envia mensaje al agente InterfazAgent, informando que debe activar la alerta nivel 2
+     * @return void
+     */
     private void level2Alert() {
+        // El mensaje es tipo INFORM
         ACLMessage phoneAlert = new ACLMessage(ACLMessage.INFORM);
         phoneAlert.addReceiver(new AID("InterfazAgent", false));
         phoneAlert.setContent("Alert level 2");
         send(phoneAlert);
     }
 
+    /**
+     * Envia mensaje al agente CoorAgent (a si mismo), indicando que debe detener el timer
+     * @return void
+     */
     private void stopTimerMsg() {
+        // El atributo timer en false indica que el timer esta detendio
         timer = false;
         ACLMessage stopTimer = new ACLMessage(ACLMessage.INFORM);
         stopTimer.addReceiver(new AID("CoorAgent", false));
         stopTimer.setContent("Stop timer");
         send(stopTimer);
+        // Aqui mismo se recibe el mensaje y se imprime
         ACLMessage resp = blockingReceive(informTemplate);
         if (resp != null && resp.getSender().getLocalName().equals("CoorAgent")) {
             System.out.println("Coordinador detuvo el timer");
         }
     }
 
+    /**
+     * Envia mensaje al agente CarAgent haciendo peticion del estado del motor
+     * @return void
+     */
     private void engineStateMsg() {
-        // Sending request to CarAgent
+        // El mensaje es tipo REQUEST
         ACLMessage engineStateReq = new ACLMessage(ACLMessage.REQUEST);
         engineStateReq.addReceiver(new AID("CarAgent", false));
         engineStateReq.setContent("Give me the engine state");
         send(engineStateReq);
     }
 
+    /**
+     * Todo agente debe tener su metodo 'setup'. En este se indica todo su comportamiento con el entorno
+     * @return void
+     */
     protected void setup() {
+        // Cada agente en cuanto inicia tiene un retraso de 3 segundos, esto con el fin de que
+        // el sniffer se inicie de manera correcta y detecte a todos los agentes
         doWait(3000);
         System.out.println("Agente >> " + getLocalName() + " iniciado.");
+        // Se crea el objeto maquina de estados finitos
         FSMBehaviour fsm = new FSMBehaviour(this) {
+
+            // Esta funcion se ejecuta al finalizar el proceso de la maquina de estados finitos
             public int onEnd() {
                 System.out.println("FSM behaviour completed.");
                 return super.onEnd();
             }
         };
 
-        // CoorAgent pide el estado del motor
+        // Se registra el primer estado. Todos los estados reciben un comportamiento
+        // y el nombre del estado. En este caso todos los estados registrados
+        // reciben como argumento un comportamiento de tipo OneShotBehaviour, este
+        // comportamiento indica que se ejecutara una sola vez.
+        // // Se pide el estado del motor del auto
         fsm.registerFirstState(new OneShotBehaviour() {
             public void action() {
                 System.out.println("Executing behaviour " + getBehaviourName());
@@ -102,11 +151,10 @@ public class CoorAgent extends Agent {
             }
         }, "A");
 
-        // CoorAgent recibe el estado del motor
+        // CoorAgent recibe el estado del motor (el cual sera false)
         fsm.registerState(new OneShotBehaviour() {
             public void action() {
                 System.out.println("Executing behaviour " + getBehaviourName());
-                // Recibe el status del motor, el cual sera false
                 ACLMessage engineStateResp = blockingReceive(informTemplate);
                 if (engineStateResp != null && engineStateResp.getSender().getLocalName().equals("CarAgent")) {
                     System.out.println("Coordinador recibio de >> " + engineStateResp.getSender().getName() +
@@ -130,7 +178,7 @@ public class CoorAgent extends Agent {
         }, "C");
 
 
-        // CoorAgent recibe el estado del peso
+        // CoorAgent recibe el estado del peso y pide el estado de la puerta
         fsm.registerState(new OneShotBehaviour() {
             public void action() {
                 System.out.println("Executing behaviour " + getBehaviourName());
@@ -147,29 +195,33 @@ public class CoorAgent extends Agent {
             }
         }, "D");
 
-        // CoorAgent recibe estado de puerta del conductor
+        // CoorAgent recibe estado de puerta
         fsm.registerState(new OneShotBehaviour() {
             public void action() {
                 System.out.println("Executing behaviour " + getBehaviourName());
-//                 Receiving doorState's message from CarAgent
                 ACLMessage doorStateMsg = blockingReceive(informTemplate);
                 if (doorStateMsg != null && doorStateMsg.getSender().getLocalName().equals("CarAgent")) {
                     System.out.println("Coordinador recibio de >> " + doorStateMsg.getSender().getName() +
                             " puerta del conductor >> " + doorStateMsg.getContent() + "\n");
                     doorState = Boolean.parseBoolean(doorStateMsg.getContent());
+                    // Si el peso que se recibio anteriormente es mayor o igual a 10, el motor esta
+                    // apagado y la puerta abierta, se informa a CoorAgent que inicie el timer
                     if (weight >= 10 && engineState == false && doorState == true) {
                         ACLMessage startTimerMsg = new ACLMessage(ACLMessage.INFORM);
                         startTimerMsg.addReceiver(new AID("CoorAgent", false));
                         startTimerMsg.setContent("Start timer");
                         send(startTimerMsg);
+                        // Se envia y recibe el mensaje de informe para iniciar el timer
                         ACLMessage resp = blockingReceive(informTemplate);
                         if (resp != null && resp.getSender().getLocalName().equals("CoorAgent")) {
                             System.out.println("Coordinador inicio el timer");
                             timer = true;
                         }
 
+                        // Se envia mensaje a CarAgent para que bloquee los seguros del auto
                         lockMsg();
 
+                        // Se envia mensaje a CarAgent para que inicie la alarma interna del auto
                         ACLMessage startInternAlarm = new ACLMessage(ACLMessage.INFORM);
                         startInternAlarm.setContent("Active intern alarm");
                         startInternAlarm.addReceiver(new AID("CarAgent", false));
@@ -179,7 +231,7 @@ public class CoorAgent extends Agent {
             }
         }, "E");
 
-        // CoorAgent ordena desactivar seguros
+        // CoorAgent hace peticion de peso a WPAgent
         fsm.registerState(new OneShotBehaviour() {
             public void action() {
                 System.out.println("Executing behaviour " + getBehaviourName());
@@ -197,14 +249,18 @@ public class CoorAgent extends Agent {
                     System.out.println("Coordinador recibio de >> " + wResp.getSender().getName() +
                             " peso >> " + wResp.getContent() + "\n");
                     weight = Float.parseFloat(wResp.getContent());
+                    // Aqui termina el caso 1 (no se olvida al bebe)
+                    // Si el peso es menor a diez, se manda mensaje para que el timer se detenga
                     if (weight < 10) {
                         stopTimerMsg();
 
+                        // Se envia mensaje a CarAgent para que la alarma interna se detenga
                         ACLMessage stopInternAlarm = new ACLMessage(ACLMessage.INFORM);
                         stopInternAlarm.addReceiver(new AID("CarAgent", false));
                         stopInternAlarm.setContent("Stop intern alarm");
                         send(stopInternAlarm);
 
+                        // Se envia mensaje a CarAgent para que desbloquee los seguros
                         unlockMsg();
                         System.out.println("Caso 1 terminado: no se olvido al bebe");
                         exitValue = 1;
@@ -215,6 +271,7 @@ public class CoorAgent extends Agent {
                 }
             }
 
+            //
             public int onEnd() {
                 return exitValue;
             }
@@ -248,12 +305,14 @@ public class CoorAgent extends Agent {
                 }
             }
 
+            // Todos los estados llevan la funcion onEnd, la cual regresa un valor de salida.
+            // Las funciones de transicion de cada estado dependen de este valor de salida
             public int onEnd() {
                 return exitValue;
             }
         }, "H");
 
-        // CoorAgent recibe estado de puerta y solicita peso
+        // CoorAgent recibe estado de peso
         fsm.registerState(new OneShotBehaviour() {
             private int exitValue;
             public void action() {
@@ -263,7 +322,9 @@ public class CoorAgent extends Agent {
                     System.out.println("Coordinador recibio de >> " + wResp.getSender().getName() +
                             " peso >> " + wResp.getContent() + "\n");
                     weight = Float.parseFloat(wResp.getContent());
+                    // Si el peso es menor a 10, entonces termina el caso 2
                     if (weight < 10) {
+                        // Se envia mensaje a CarAgent para que desbloquee los seguros
                         unlockMsg();
                         System.out.println("Caso 2 terminado: alerta nivel 1");
                         exitValue = 1;
@@ -276,7 +337,7 @@ public class CoorAgent extends Agent {
         }, "I");
 
 
-        // CoorAgent recibe estado de peso
+        // CoorAgent pide a TempAgent la temperatura
         fsm.registerState(new OneShotBehaviour() {
             public void action() {
                 System.out.println("Executing behaviour " + getBehaviourName());
@@ -287,15 +348,18 @@ public class CoorAgent extends Agent {
             }
         }, "J");
 
+        // Se recibe de TempAgent la temperatura
         fsm.registerState(new OneShotBehaviour() {
             private int exitValue;
             public void action() {
                 ACLMessage tempResp = blockingReceive(informTemplate);
                 if (tempResp != null && tempResp.getSender().getLocalName().equals("TempAgent")) {
                     temperature = Integer.parseInt(tempResp.getContent());
+                    // Si es mayor a 30 grados se envia una alerta nivel 2
                     if (temperature >= 30) {
                         level2Alert();
                         System.out.println("Alertando a proteccion civil..");
+                        // Se envia mensaje a CarAgent para que inicie la alarma del auto
                         ACLMessage alarmMsg = new ACLMessage(ACLMessage.INFORM);
                         alarmMsg.addReceiver(new AID("CarAgent", false));
                         alarmMsg.setContent("Start alarm");
@@ -416,16 +480,7 @@ public class CoorAgent extends Agent {
         fsm.registerDefaultTransition("J", "K");
         fsm.registerTransition("K", "Z", 2);
         fsm.registerTransition("K", "J", 1);
-//        fsm.registerDefaultTransition("H", "I");
-//        fsm.registerDefaultTransition("I", "J");
-//        fsm.registerTransition("J", "K", 0);
-//        fsm.registerTransition("J", "Z", 3);
-//        fsm.registerTransition("J", "M", 1);
-//        fsm.registerDefaultTransition("K", "L");
-//        fsm.registerDefaultTransition("L", "Z");
-//        fsm.registerDefaultTransition("M", "N");
-//        fsm.registerDefaultTransition("N", "O");
-//        fsm.registerDefaultTransition("O", "Z");
+
         addBehaviour(fsm);
 
     }

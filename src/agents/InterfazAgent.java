@@ -11,6 +11,7 @@ public class InterfazAgent extends Agent {
 
     protected void setup() {
         System.out.println("Agente interfaz activado.");
+        // Se le anade un comportamiento ciclico al agente para que siempre este en espera de mensaje
         addBehaviour(new CyclicBehaviour() {
             public void action() {
                 ACLMessage alertMsg = blockingReceive();

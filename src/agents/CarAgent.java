@@ -24,13 +24,33 @@ public class CarAgent extends Agent {
     private static boolean locks;
     private static boolean alarm;
 
+    /**
+     * Cambia el valor de engineState (estado de la puerta del auto) al recibido como parametro
+     * @param aux
+     */
     public static void setDoorState(boolean aux) { doorState = aux; }
+
+    /**
+     * Cambia el valor de internAlarm (estado de la alarma interna del auto) al recibido como parametro
+     * @param aux
+     */
     public static void setInterAlarmState(boolean aux) { internAlarm = aux; }
+
+    /**
+     * Desbolquea los seguros del auto
+     */
     public static void unlock() { locks = false; }
+
+    /**
+     * Bloquea los seguros del auto
+     */
     public static void lock() { locks = true; }
 
     MessageTemplate requestTemplate = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
 
+    /**
+     * Envia mensaje con el estado de la puerta del auto a CoorAgent
+     */
     private void sendDoorStateMsg() {
         ACLMessage doorStateMsg = new ACLMessage(ACLMessage.INFORM);
         doorStateMsg.addReceiver(new AID("CoorAgent", false));
@@ -38,6 +58,9 @@ public class CarAgent extends Agent {
         send(doorStateMsg);
     }
 
+    /**
+     * Envia mensaje con el estado del motor del auto a CoorAgent
+     */
     public void sendEngineStateMsg() {
         // Sending engine state to CoorAgent
         ACLMessage infoResp = new ACLMessage(ACLMessage.INFORM);
@@ -49,6 +72,7 @@ public class CarAgent extends Agent {
     public void setup() {
         doWait(3000);
         System.out.println("Agente >> " + getLocalName() + " iniciado.");
+        // Se le anade un comportamiento ciclico al agente para que siempre este en espera de mensaje
         addBehaviour(new CyclicBehaviour(this) {
 
             public void action() {
@@ -58,14 +82,8 @@ public class CarAgent extends Agent {
                         coorMsg.getPerformative() == ACLMessage.REQUEST) {
                     if (coorMsg.getContent().equals("Give me the engine state")) {
                         sendEngineStateMsg();
-//                    engineState = new Random().nextBoolean();
-//                    doorState = new Random().nextBoolean();
                     } else if (coorMsg.getContent().equals("Give me the door's state 1")) {
                         setDoorState(true);
-                        sendDoorStateMsg();
-                    } else if (coorMsg.getContent().equals("Give me the door's state")) {
-                        System.out.println("CarAgent recibio peticion de estado de puerta");
-                        setDoorState(new Random().nextBoolean());
                         sendDoorStateMsg();
                     }
                 } else if (coorMsg != null && coorMsg.getSender().getLocalName().equals("CoorAgent") &&
@@ -73,8 +91,6 @@ public class CarAgent extends Agent {
                     if (coorMsg.getContent().equals("Active intern alarm")) {
                         setInterAlarmState(true);
                         System.out.println("CarAgent activo alarma interna");
-//                        setDoorState(true);
-//                        sendDoorStateMsg();
                     } else if (coorMsg.getContent().equals("Unlock the doors")) {
                         unlock();
                         System.out.println("CarAgent desactivo los seguros del auto");
